@@ -31,14 +31,12 @@ with open(cdrfile, 'rb') as csvfile:
         cdrHangupCause = row[9]
         cdrAccountCode = row[12]
         if cdrHangupCause == 'NORMAL_CLEARING' or cdrHangupCause == 'ORIGINATOR_CANCEL':
-            #if (len(cdrDestNumber) > 6 and len(cdrDestNumber) < 13) or (len(cdrIdNumber) > 6 and len(cdrIdNumber) < 13):
-            if re.match('^\+?1?(\d{10})$',cdrDestNumber) or re.match('^\+?1?(\d{5,10})$',cdrIdNumber):
+            if re.match('^\+?1?(\d{5,10})$',cdrDestNumber) or re.match('^\+?1?(\d{5,10})$',cdrIdNumber):
                 if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension or cdrIdNumber == monitoredNumber or cdrDestNumber == monitoredNumber:
                     callDuration = callDuration + int(cdrDuration)
                     callTotal = callTotal + int(cdrBillsec)
                     print str(cdrIdNumber), " Calls ", cdrDestNumber, " for ", cdrDuration, " seconds, hangup was defined as", cdrHangupCause
                     next
-                    
         
 callMinutes = callTotal / 60
 callRemainderSeconds = callTotal % 60
