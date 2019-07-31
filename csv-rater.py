@@ -30,14 +30,32 @@ with open(cdrfile, 'rb') as csvfile:
         cdrBillsec = row[8]
         cdrHangupCause = row[9]
         cdrAccountCode = row[12]
-        if cdrHangupCause == 'NORMAL_CLEARING' or cdrHangupCause == 'ORIGINATOR_CANCEL':
-            if re.match('^\+?1?(\d{5,10})$',cdrDestNumber) or re.match('^\+?1?(\d{5,10})$',cdrIdNumber):
-                if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension or cdrIdNumber == monitoredNumber or cdrDestNumber == monitoredNumber:
+        cdrCodec = row[13]
+        
+        if cdrHangupCause == 'NORMAL_CLEARING':# or cdrHangupCause == 'ORIGINATOR_CANCEL':
+            if cdrBillsec == 0:
+                continue
+            if re.match('^\+?1?(\d{5,10})$',cdrDestNumber) and re.match('^\+?1?(\d{5,10})$',cdrIdNumber):
+                 #This is for local call matching
+                if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
+                    print "*Local call", cdrIdNumber, "calls", cdrDestNumber, "using", cdrCodec, "for", cdrDuration, "(", cdrBillsec, ") seconds,"
+                    continue
+                
+                if cdrIdNumber == monitoredExtension:
                     callDuration = callDuration + int(cdrDuration)
                     callTotal = callTotal + int(cdrBillsec)
-                    print str(cdrIdNumber), " Calls ", cdrDestNumber, " for ", cdrDuration, " seconds, hangup was defined as", cdrHangupCause
-                    next
-        
+                    print "!Extension", str(cdrIdNumber), " Calls ", cdrDestNumber, " for ", cdrDuration, "(", cdrBillsec, ") seconds, hangup was defined as", cdrHangupCause, "using", cdrCodec
+                    
+#                elif cdrIdNumber == monitoredNumber:
+#                    callDuration = callDuration + int(cdrDuration)
+#                    callTotal = callTotal + int(cdrBillsec)
+#                    print "!Source number", cdrIdNumber, "calls", cdrDestNumber, " for ", cdrDuration, "(", cdrBillsec, ") seconds, hangup was defined as", cdrHangupCause, "using", cdrCodec
+                    
+                elif cdrDestNumber == monitoredExtension:
+                    callDuration = callDuration + int(cdrDuration)
+                    callTotal = callTotal + int(cdrBillsec)
+                    print "!Number", str(cdrIdNumber), " Calls ", cdrDestNumber, " for ", cdrDuration, "(", cdrBillsec, ") seconds, hangup was defined as", cdrHangupCause, "using", cdrCodec
+ 
 callMinutes = callTotal / 60
 callRemainderSeconds = callTotal % 60
-print "Total Call length is", callDuration, " seconds, but billable is", callMinutes, "minutes and", callRemainderSeconds, "seconds."
+print "Total Call length is", callDuration, "seconds, but billable is", callMinutes, "minutes and", callRemainderSeconds, "seconds."
