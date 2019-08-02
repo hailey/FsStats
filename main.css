@@ -1,0 +1,20 @@
+body {
+    background-color:#000;
+    color: #fff;
+}
+h1 {
+    color: #acc;
+    font-size: +3em;
+}
+h2 {
+    color: #ccc;
+    font-size: +2em;
+}
+div#startts {
+    color: #faa;
+    font-size:+2em;
+}
+div#tcl {
+    color:#f88;
+    font-size:+2em;
+}

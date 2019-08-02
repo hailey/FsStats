@@ -3,11 +3,17 @@
 import csv
 import re
 import sys
+import datetime
 import ConfigParser
 
 config = ConfigParser.ConfigParser()
-config.read('config.ini')
+if len(sys.argv) > 1:
+    config.read(sys.argv[1])
+else:
+    config.read('config.ini')
+    
 cfgDebug = config.get("main","debug")
+htmlDocFile = config.get("main","htmldoc")
 cdrfile = config.get("rater","cdr-file")
 monitoredExtension = config.get("rater","extension")
 monitoredNumber = config.get("rater","inbound-number")
@@ -17,6 +23,7 @@ print "Looking for calls to and from", monitoredExtension, "as well as", monitor
 
 callTotal = 0
 callDuration = 0
+lineHtml = ""
 
 def sendDebug(debugMsg):
     "Debug Function that checks if ini is set true for debug"
@@ -24,12 +31,20 @@ def sendDebug(debugMsg):
         print debugMsg
     return
 
+def outputHtml(outputString):
+    
+    return
+def outputRow(rowString):
+    lineString = "<li>" + rowString + "</li>"
+    return lineString
+
 sendDebug( "!!!DEBUG ENABLED!!!")
 with open(cdrfile, 'rb') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
     # The CDR Layout is as follows, <template name="example">"${caller_id_name}","${caller_id_number}","${destination_number}",
     #                               "${context}","${start_stamp}","${answer_stamp}","${end_stamp}","${duration}","${billsec}",
     #                               "${hangup_cause}","${uuid}","${bleg_uuid}","${accountcode}","${read_codec}","${write_codec}"</template>
+    firstloop = 0;
     for row in cdrHandle:
         cdrIdName = row[0]
         cdrIdNumber = row[1]
@@ -43,7 +58,11 @@ with open(cdrfile, 'rb') as csvfile:
         cdrAccountCode = row[12]
         cdrCodec = row[13]
         
-        if cdrHangupCause == 'NORMAL_CLEARING':# or cdrHangupCause == 'ORIGINATOR_CANCEL':
+        if callDuration == 0 and firstloop == 0:
+            firstTS = cdrStart
+            firstloop = 1
+
+        if cdrHangupCause == 'NORMAL_CLEARING':
             if cdrBillsec == 0:
                 continue
             
@@ -51,11 +70,13 @@ with open(cdrfile, 'rb') as csvfile:
                 #outbound
                 callDuration = callDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrBillsec)
-                sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                lineHtml += "<li>&rarr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")")
                 continue
             
             if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
                 #inbound
+                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")</li>\n"
                 callDuration = callDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrBillsec)
                 sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
@@ -63,11 +84,35 @@ with open(cdrfile, 'rb') as csvfile:
 
                  #This is for local call matching
             if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
+                lineHtml += "<li>&harr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
                 continue
                 
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
+lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + ". Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
 print "Total Call length is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
 
-
+topHtml = """
+<html>
+<head>
+<title>Stats page for %s</title>
+<link href='main.css' rel='stylesheet' type='text/css' media='all'>
+</head>
+<body>
+<h1>Call Stats for %s</h1>
+<div>Generated at %s</div>
+<div id='startts'>First read timestamp is at %s</div>
+%s
+<hr>
+<h2>Call Logs</h2>
+<ol>
+%s
+</ol>
+</body>
+</html>""" % (monitoredExtension,monitoredExtension,datetime.datetime.now(),firstTS,lineResults,lineHtml)
+sendDebug(topHtml)
+print "Writing above HTML to " + htmlDocFile
+htmlFile = open (htmlDocFile,"w")
+htmlFile.write(topHtml)
+htmlFile.close()
