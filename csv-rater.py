@@ -46,22 +46,26 @@ with open(cdrfile, 'rb') as csvfile:
         if cdrHangupCause == 'NORMAL_CLEARING':# or cdrHangupCause == 'ORIGINATOR_CANCEL':
             if cdrBillsec == 0:
                 continue
-            if re.match('^\+?1?(\d{5,10})$',cdrDestNumber) and re.match('^\+?1?(\d{5,10})$',cdrIdNumber):
-                 #This is for local call matching
-                if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
-                    sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
-                    continue
-                
-                if cdrIdNumber == monitoredExtension:
-                    callDuration = callDuration + int(cdrDuration)
-                    callTotal = callTotal + int(cdrBillsec)
-                    sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
+            
+            if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
+                #outbound
+                callDuration = callDuration + int(cdrDuration)
+                callTotal = callTotal + int(cdrBillsec)
+                sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                continue
+            
+            if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
+                #inbound
+                callDuration = callDuration + int(cdrDuration)
+                callTotal = callTotal + int(cdrBillsec)
+                sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                continue
 
-                elif cdrDestNumber == monitoredExtension:
-                    callDuration = callDuration + int(cdrDuration)
-                    callTotal = callTotal + int(cdrBillsec)
-                    sendDebug("Inbound call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
-                     
+                 #This is for local call matching
+            if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
+                sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
+                continue
+                
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
 print "Total Call length is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
