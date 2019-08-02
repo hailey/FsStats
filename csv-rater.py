@@ -31,13 +31,6 @@ def sendDebug(debugMsg):
         print debugMsg
     return
 
-def outputHtml(outputString):
-    
-    return
-def outputRow(rowString):
-    lineString = "<li>" + rowString + "</li>"
-    return lineString
-
 sendDebug( "!!!DEBUG ENABLED!!!")
 with open(cdrfile, 'rb') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -85,9 +78,10 @@ with open(cdrfile, 'rb') as csvfile:
 
                  #This is for local call matching
             if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
-                lineHtml += "<li>&harr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
-                sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
-                continue
+                if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension:
+                    lineHtml += "<li>&harr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                    sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
+                    continue
                 
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
@@ -110,6 +104,8 @@ topHtml = """
 <ol>
 %s
 </ol>
+<hr>
+Call stats are generated every hour. Actual billed time should be less than or equal to calculated calls.
 </body>
 </html>""" % (monitoredExtension,monitoredExtension,datetime.datetime.now(),firstTS,lineResults,lineHtml)
 sendDebug(topHtml)
