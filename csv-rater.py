@@ -61,11 +61,12 @@ with open(cdrfile, 'rb') as csvfile:
         if callDuration == 0 and firstloop == 0:
             firstTS = cdrStart
             firstloop = 1
-
-        if cdrHangupCause == 'NORMAL_CLEARING':
-            if cdrBillsec == 0:
-                continue
+            continue
+        
+        if int(cdrBillsec) == 0:
+            continue
             
+        if cdrHangupCause == 'NORMAL_CLEARING':            
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
                 #outbound
                 callDuration = callDuration + int(cdrDuration)
@@ -90,7 +91,7 @@ with open(cdrfile, 'rb') as csvfile:
                 
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
-lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + ". Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
+lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
 print "Total Call length is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
 
 topHtml = """

@@ -18,3 +18,8 @@ div#tcl {
     color:#f88;
     font-size:+2em;
 }
+
+li {
+    padding-top:10px;
+    padding-bottom:10px;
+}
