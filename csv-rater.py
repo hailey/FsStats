@@ -79,6 +79,7 @@ with open(cdrfile, 'rb') as csvfile:
                  #This is for local call matching
             if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
                 if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension:
+                    callDuration = callDuration + int(cdrDuration)
                     lineHtml += "<li>&harr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                     sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
                     continue
