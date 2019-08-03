@@ -1,0 +1,2 @@
+0 * * * * root /path/to/csv-rater.py /path/to/config-1.ini
+3 * * * * root /path/to/csv-rater.py /path/to/config-2.ini

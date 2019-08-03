@@ -87,7 +87,7 @@ with open(cdrfile, 'rb') as csvfile:
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
 lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
-print "Total Call length is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
+print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
 
 topHtml = """
 <html>
@@ -98,7 +98,7 @@ topHtml = """
 <body>
 <h1>Call Stats for %s</h1>
 <div>Generated at %s</div>
-<div id='startts'>First read timestamp is at %s</div>
+<div id='startts'>Log starts on %s</div>
 %s
 <hr>
 <h2>Call Logs</h2>
