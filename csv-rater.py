@@ -65,7 +65,7 @@ with open(cdrfile, 'rb') as csvfile:
                 #inbound to monitored number
                 callDuration = callDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrBillsec)
-                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")</li>\n"
+                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
 
@@ -79,7 +79,7 @@ with open(cdrfile, 'rb') as csvfile:
             
             if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
                 #inbound
-                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")</li>\n"
+                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 callDuration = callDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrBillsec)
                 sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
