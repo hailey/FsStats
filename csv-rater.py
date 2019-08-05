@@ -39,6 +39,7 @@ with open(cdrfile, 'rb') as csvfile:
     #                               "${hangup_cause}","${uuid}","${bleg_uuid}","${accountcode}","${read_codec}","${write_codec}"</template>
     firstloop = 0;
     for row in cdrHandle:
+        #print ",".join(row)
         cdrIdName = row[0]
         cdrIdNumber = row[1]
         cdrDestNumber = row[2]
@@ -59,7 +60,15 @@ with open(cdrfile, 'rb') as csvfile:
         if int(cdrBillsec) == 0:
             continue
             
-        if cdrHangupCause == 'NORMAL_CLEARING':            
+        if cdrHangupCause == 'NORMAL_CLEARING':
+            if cdrDestNumber == monitoredNumber:
+                #inbound to monitored number
+                callDuration = callDuration + int(cdrDuration)
+                callTotal = callTotal + int(cdrBillsec)
+                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")</li>\n"
+                sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                continue
+
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
                 #outbound
                 callDuration = callDuration + int(cdrDuration)
@@ -75,7 +84,7 @@ with open(cdrfile, 'rb') as csvfile:
                 callTotal = callTotal + int(cdrBillsec)
                 sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
-
+            
                  #This is for local call matching
             if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
                 if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension:
@@ -100,12 +109,12 @@ topHtml = """
 <div>Generated at %s</div>
 <div id='startts'>Log starts on %s</div>
 %s
-<hr>
+<hr />
 <h2>Call Logs</h2>
 <ol>
 %s
 </ol>
-<hr>
+<hr />
 Call stats are generated every hour. Actual billed time should be less than or equal to calculated calls.
 </body>
 </html>""" % (monitoredExtension,monitoredExtension,datetime.datetime.now(),firstTS,lineResults,lineHtml)
