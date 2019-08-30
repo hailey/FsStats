@@ -23,6 +23,10 @@ print "Looking for calls to and from", monitoredExtension, "as well as", monitor
 
 callTotal = 0
 callDuration = 0
+inboundDuration = 0
+outboundDuration = 0
+inboundRate = 0.012
+outboundRate = 0.0098
 lineHtml = ""
 
 def sendDebug(debugMsg):
@@ -64,6 +68,7 @@ with open(cdrfile, 'rb') as csvfile:
             if cdrDestNumber == monitoredNumber:
                 #inbound to monitored number
                 callDuration = callDuration + int(cdrDuration)
+                inboundDuration = inboundDuration + int(cdrBillsec)
                 callTotal = callTotal + int(cdrBillsec)
                 lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
@@ -71,8 +76,14 @@ with open(cdrfile, 'rb') as csvfile:
 
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
                 #outbound
+                if re.match("^(\+?1)?(8(00|44|55|66|77|88)[2-9]\d{6})$", cdrDestNumber):
+                    print "Got an 800 number, not billing."
+                else:
+                    outboundDuration = outboundDuration + int(cdrBillsec)
+                    callTotal = callTotal + int(cdrBillsec)
+                    
                 callDuration = callDuration + int(cdrDuration)
-                callTotal = callTotal + int(cdrBillsec)
+        
                 lineHtml += "<li>&rarr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")")
                 continue
@@ -81,6 +92,7 @@ with open(cdrfile, 'rb') as csvfile:
                 #inbound
                 lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 callDuration = callDuration + int(cdrDuration)
+                inboundDuration = inboundDuration + int(cdrBillsec)
                 callTotal = callTotal + int(cdrBillsec)
                 sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
@@ -95,9 +107,21 @@ with open(cdrfile, 'rb') as csvfile:
                 
 callMinutes = str(callTotal / 60)
 callRemainderSeconds = str(callTotal % 60)
-lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
-print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
+inboundMinutes = str(inboundDuration / 60)
+inboundRemainder = str(inboundDuration % 60)
+outboundMinutes = str(outboundDuration / 60)
+outboundRemainder = str(outboundDuration % 60)
 
+inboundCost = inboundRate * float(inboundDuration / 60)
+outboundCost = outboundRate * float(outboundDuration / 60)
+totalCost = inboundCost + outboundCost
+
+lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
+lineResults += "<div class='call-len'>Inbound call length: " + inboundMinutes + " minutes and " + inboundRemainder + " seconds. Est: $" + str(inboundCost) + "</div>"
+lineResults += "<div class='call-len'>Outbound call length: " + outboundMinutes + " minutes and " + outboundRemainder +" seconds. Est: $" + str(outboundCost) + "</div>"
+lineResults += "<div class='est-prices'>Estimation is $" + str(totalCost) + "</div>"
+print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
+print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration)
 topHtml = """
 <html>
 <head>

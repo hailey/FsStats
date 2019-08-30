@@ -19,6 +19,14 @@ div#tcl {
     font-size:+2em;
 }
 
+div.call-len {
+    font-size: +2em;
+    color: #f29;
+}
+div.est-prices {
+    font-size: +3em;
+}
+
 li {
     padding-top:10px;
     padding-bottom:10px;
