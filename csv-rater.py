@@ -25,8 +25,8 @@ callTotal = 0
 callDuration = 0
 inboundDuration = 0
 outboundDuration = 0
-inboundRate = 0.012
-outboundRate = 0.0098
+inboundRate = 0.012 / 60
+outboundRate = 0.0098 / 60
 lineHtml = ""
 
 def sendDebug(debugMsg):
@@ -112,8 +112,8 @@ inboundRemainder = str(inboundDuration % 60)
 outboundMinutes = str(outboundDuration / 60)
 outboundRemainder = str(outboundDuration % 60)
 
-inboundCost = inboundRate * float(inboundDuration / 60)
-outboundCost = outboundRate * float(outboundDuration / 60)
+inboundCost = inboundRate * inboundDuration
+outboundCost = outboundRate * outboundDuration
 totalCost = inboundCost + outboundCost
 
 lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
