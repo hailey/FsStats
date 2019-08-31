@@ -4,29 +4,44 @@ body {
 }
 h1 {
     color: #acc;
-    font-size: +3em;
+    font-size: 3em;
 }
 h2 {
     color: #ccc;
-    font-size: +2em;
+    font-size: 2em;
 }
 div#startts {
     color: #faa;
-    font-size:+2em;
+    font-size:2em;
 }
 div#tcl {
     color:#f88;
-    font-size:+2em;
+    font-size:2em;
+}
+
+div.price {
+    float: left;
+    font-size: 2em;
 }
 
 div.call-len {
-    font-size: +2em;
+    font-size: 2em;
     color: #f29;
 }
 div.est-prices {
-    font-size: +3em;
+    font-size: 3em;
+    background-color: #444;
 }
 
+div.rate {
+    background-color: #555;
+    width: 300px;
+    padding: 8px;
+}
+
+div.price {
+    float: right;
+}
 li {
     padding-top:10px;
     padding-bottom:10px;

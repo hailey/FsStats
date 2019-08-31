@@ -70,8 +70,8 @@ with open(cdrfile, 'rb') as csvfile:
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrBillsec)
                 callTotal = callTotal + int(cdrBillsec)
-                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
-                sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                lineHtml += "<li>&larr;" + cdrIdNumber + " (" + cdrIdName + ") calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
 
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
@@ -90,7 +90,7 @@ with open(cdrfile, 'rb') as csvfile:
             
             if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
                 #inbound
-                lineHtml += "<li>&larr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                lineHtml += "<li>&larr;" + cdrIdNumber + " (" + cdrIdName + ") calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrBillsec)
                 callTotal = callTotal + int(cdrBillsec)
@@ -131,6 +131,10 @@ topHtml = """
 <body>
 <h1>Call Stats for %s</h1>
 <div>Generated at %s</div>
+<div class='rate'>
+    Inbound rate: <span class='price'>$0.012</span>
+    Outbound rate: <span class='price'>$0.0098</span>
+</div>
 <div id='startts'>Log starts on %s</div>
 %s
 <hr />
