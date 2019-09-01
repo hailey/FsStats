@@ -134,6 +134,7 @@ topHtml = """
 <div class='rate'>
     Inbound rate: <span class='price'>$0.012</span>
     Outbound rate: <span class='price'>$0.0098</span>
+    (Tax rates is not factored)
 </div>
 <div id='startts'>Log starts on %s</div>
 %s
