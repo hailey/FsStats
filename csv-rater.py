@@ -44,16 +44,20 @@ def sendDebug(debugMsg):
     if cfgDebug == "true":
         print debugMsg
     return
-#dateStart = datetime(yearStart,monthStart,dayStart)
+
+def intToTimez(length):
+    "Converts seconds into hours:minutes:seconds"
+    minutes = int(length) / 60
+    seconds = int(length) % 60
+    hours = int(length) / 3600
+    timeStamp = str(hours) + ":" + str(minutes) + ":" + str(seconds)
+    return timeStamp
 
 dateDiff = diff_month(datetime.datetime.today(),datetime.datetime(yearStart,monthStart,dayStart))
 
 print "The arguments are: " + str(cdrfile)
 print "Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber
 print "DID month count is " + str(dateDiff)
-
-
-print dateDiff
 sendDebug( "!!!DEBUG ENABLED!!!")
 with open(cdrfile, 'rb') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -86,6 +90,7 @@ with open(cdrfile, 'rb') as csvfile:
             continue
             
         if cdrHangupCause == 'NORMAL_CLEARING':
+            minuteStamp = intToTimez(cdrDuration)
             if (colorCount % 2) == 0:
                 classcolor = 'blueish'
             else:
@@ -98,8 +103,8 @@ with open(cdrfile, 'rb') as csvfile:
                 cnamCost = cnamCost + cnamRate;
                 colorCount += 1
                 
-                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
-                sendDebug("Inbound: " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + minuteStamp + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>"      
+                sendDebug("Inbound: " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + minuteStamp + " seconds. (" + cdrCodec + ")")
                 continue
 
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
@@ -114,20 +119,20 @@ with open(cdrfile, 'rb') as csvfile:
                 callDuration = callDuration + int(cdrDuration)
                 colorCount += 1
         
-                lineHtml += "<tr class='"+ classcolor + "'><td>Outbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
-                sendDebug("Outbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")")
+                lineHtml += "<tr class='"+ classcolor + "'><td>Outbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + minuteStamp + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>"      
+                sendDebug("Outbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + minuteStamp + " seconds. (codec: " + cdrCodec + ")")
                 continue
             
             if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
                 #inbound
-                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"
+                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + minuteStamp + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>"
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrDuration)
                 cnamCost = cnamCost + cnamRate;
                 cnamCount = cnamCount + 1
                 colorCount += 1
-                sendDebug("Inbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                sendDebug("Inbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + minuteStamp + " (" + cdrCodec + ")")
                 continue
             
                  #This is for local call matching
@@ -135,8 +140,8 @@ with open(cdrfile, 'rb') as csvfile:
                 if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension:
                     callDuration = callDuration + int(cdrDuration)
                     colorCount += 1
-                    lineHtml += "<tr class='"+ classcolor + "'><td>Local</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
-                    sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
+                    lineHtml += "<tr class='"+ classcolor + "'><td>Local</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + minuteStamp + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>"      
+                    sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + minuteStamp + "(" + cdrCodec + ")")
                     continue
                 
 callMinutes = str(callTotal / 60)
