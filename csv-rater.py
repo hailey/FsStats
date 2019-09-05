@@ -18,6 +18,7 @@ htmlDocFile = config.get("main","htmldoc")
 cdrfile = config.get("rater","cdr-file")
 monitoredExtension = config.get("rater","extension")
 monitoredNumber = config.get("rater","inbound-number")
+didCombined = config.get('main','didComb')
 yearStart = int(config.get('main','year'))
 monthStart = int(config.get('main','month'))
 dayStart = int(config.get('main','day'))
@@ -31,12 +32,8 @@ cnamCount = 0
 inboundRate = 0.012 / 60
 outboundRate = 0.0098 / 60
 cnamRate = 0.0039
-didRate = 1.25
-didTax = 0.016306125
-e911 = 1.39
 lineHtml = ""
 
-didCombined = didRate + didTax + e911;
 
 
 def diff_month(d1, d2):
@@ -148,7 +145,7 @@ inboundMinutes = str(inboundDuration / 60)
 inboundRemainder = str(inboundDuration % 60)
 outboundMinutes = str(outboundDuration / 60)
 outboundRemainder = str(outboundDuration % 60)
-monthBill = dateDiff * didCombined;
+monthBill = dateDiff * float(didCombined);
 inboundCost = inboundRate * inboundDuration
 outboundCost = outboundRate * outboundDuration
 totalCost = inboundCost + outboundCost + cnamCost + monthBill
