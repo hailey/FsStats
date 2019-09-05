@@ -3,6 +3,7 @@
 import csv
 import re
 import sys
+import time
 import datetime
 import ConfigParser
 
@@ -17,31 +18,53 @@ htmlDocFile = config.get("main","htmldoc")
 cdrfile = config.get("rater","cdr-file")
 monitoredExtension = config.get("rater","extension")
 monitoredNumber = config.get("rater","inbound-number")
-
-print "The arguments are: " , str(cdrfile)
-print "Looking for calls to and from", monitoredExtension, "as well as", monitoredNumber
+yearStart = int(config.get('main','year'))
+monthStart = int(config.get('main','month'))
+dayStart = int(config.get('main','day'))
 
 callTotal = 0
 callDuration = 0
 inboundDuration = 0
 outboundDuration = 0
+cnamCost = 0
+cnamCount = 0
 inboundRate = 0.012 / 60
 outboundRate = 0.0098 / 60
+cnamRate = 0.0039
+didRate = 1.25
+didTax = 0.016306125
+e911 = 1.39
 lineHtml = ""
+
+didCombined = didRate + didTax + e911;
+
+
+def diff_month(d1, d2):
+    return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 def sendDebug(debugMsg):
     "Debug Function that checks if ini is set true for debug"
     if cfgDebug == "true":
         print debugMsg
     return
+#dateStart = datetime(yearStart,monthStart,dayStart)
 
+dateDiff = diff_month(datetime.datetime.today(),datetime.datetime(yearStart,monthStart,dayStart))
+
+print "The arguments are: " + str(cdrfile)
+print "Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber
+print "DID month count is " + str(dateDiff)
+
+
+print dateDiff
 sendDebug( "!!!DEBUG ENABLED!!!")
 with open(cdrfile, 'rb') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
     # The CDR Layout is as follows, <template name="example">"${caller_id_name}","${caller_id_number}","${destination_number}",
     #                               "${context}","${start_stamp}","${answer_stamp}","${end_stamp}","${duration}","${billsec}",
     #                               "${hangup_cause}","${uuid}","${bleg_uuid}","${accountcode}","${read_codec}","${write_codec}"</template>
-    firstloop = 0;
+    firstloop = 0
+    colorCount = 0
     for row in cdrHandle:
         #print ",".join(row)
         cdrIdName = row[0]
@@ -55,6 +78,7 @@ with open(cdrfile, 'rb') as csvfile:
         cdrHangupCause = row[9]
         cdrAccountCode = row[12]
         cdrCodec = row[13]
+        cdrWriteCodec = row[14]
         
         if callDuration == 0 and firstloop == 0:
             firstTS = cdrStart
@@ -65,13 +89,20 @@ with open(cdrfile, 'rb') as csvfile:
             continue
             
         if cdrHangupCause == 'NORMAL_CLEARING':
+            if (colorCount % 2) == 0:
+                classcolor = 'blueish'
+            else:
+                classcolor = 'dark'
             if cdrDestNumber == monitoredNumber:
                 #inbound to monitored number
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrDuration)
-                lineHtml += "<li>&larr;" + cdrIdNumber + " (" + cdrIdName + ") calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
-                sendDebug("Inbound call from PSTN: , " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                cnamCost = cnamCost + cnamRate;
+                colorCount += 1
+                
+                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
+                sendDebug("Inbound: " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
 
             if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
@@ -81,27 +112,33 @@ with open(cdrfile, 'rb') as csvfile:
                 else:
                     outboundDuration = outboundDuration + int(cdrDuration)
                     callTotal = callTotal + int(cdrDuration)
-                    
+                cnamCost = cnamCost + cnamRate;
+                cnamCount = cnamCount + 1
                 callDuration = callDuration + int(cdrDuration)
+                colorCount += 1
         
-                lineHtml += "<li>&rarr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
-                sendDebug("Outbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")")
+                lineHtml += "<tr class='"+ classcolor + "'><td>Outbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
+                sendDebug("Outbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (codec: " + cdrCodec + ")")
                 continue
             
             if re.match('^\+?1?(\d{7,10})$',cdrIdNumber) and cdrDestNumber == monitoredExtension:
                 #inbound
-                lineHtml += "<li>&larr;" + cdrIdNumber + " (" + cdrIdName + ") calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrDuration)
-                sendDebug("Inbound call, " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
+                cnamCost = cnamCost + cnamRate;
+                cnamCount = cnamCount + 1
+                colorCount += 1
+                sendDebug("Inbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ") seconds. (" + cdrCodec + ")")
                 continue
             
                  #This is for local call matching
             if re.match('^(\d{5})$',cdrIdNumber) and re.match('^(\d{5})$',cdrDestNumber):
                 if cdrIdNumber == monitoredExtension or cdrDestNumber == monitoredExtension:
                     callDuration = callDuration + int(cdrDuration)
-                    lineHtml += "<li>&harr;" + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + " (" + cdrBillsec + ") seconds at " + cdrStart + " (codec: " + cdrCodec + ")</li>\n"
+                    colorCount += 1
+                    lineHtml += "<tr class='"+ classcolor + "'><td>Local</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + cdrDuration + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>\n"      
                     sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + cdrDuration + "(" + cdrBillsec + ")(" + cdrCodec + ")")
                     continue
                 
@@ -111,17 +148,22 @@ inboundMinutes = str(inboundDuration / 60)
 inboundRemainder = str(inboundDuration % 60)
 outboundMinutes = str(outboundDuration / 60)
 outboundRemainder = str(outboundDuration % 60)
-
+monthBill = dateDiff * didCombined;
 inboundCost = inboundRate * inboundDuration
 outboundCost = outboundRate * outboundDuration
-totalCost = inboundCost + outboundCost
+totalCost = inboundCost + outboundCost + cnamCost + monthBill
 
-lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.</div>"
-lineResults += "<div class='call-len'>Inbound call length: " + inboundMinutes + " minutes and " + inboundRemainder + " seconds. Est: $" + str(inboundCost) + "</div>"
-lineResults += "<div class='call-len'>Outbound call length: " + outboundMinutes + " minutes and " + outboundRemainder +" seconds. Est: $" + str(outboundCost) + "</div>"
+
+
+lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds in " + str(colorCount) +" calls</div>"
+lineResults += "<div class='call-len'>Inbound: " + inboundMinutes + " minutes and " + inboundRemainder + " seconds.</div><div class='est'>Inbound Estimate: $" + str(inboundCost) + "</div>"
+lineResults += "<div class='call-len'>Outbound: " + outboundMinutes + " minutes and " + outboundRemainder +" seconds.</div><div class='est'>Outbound Estimate: $" + str(outboundCost) + "</div>"
+lineResults += "<div class='call-len'>CNAM: " + str(cnamCount) + " lookps.</div>"
+lineResults += "<div class='est'>Estimate: $" + str(cnamCost) + ".</div>"
+lineResults += "<div class='est-prices'>DID Renewal Cost: $" + str(monthBill) + " over " + str(dateDiff) +" months.</div>"
 lineResults += "<div class='est-prices'>Calculated Expenses: $" + str(totalCost) + "</div>"
 print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
-print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration)
+print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration) + " CNAM lookups: " + str(cnamCost)
 topHtml = """
 <html>
 <head>
@@ -134,15 +176,28 @@ topHtml = """
 <div class='rate'>
     Inbound rate: <span class='price'>$0.012</span>
     Outbound rate: <span class='price'>$0.0098</span>
-    (Tax rates is not factored)
+    Monthly DID rate: <span class='price'>$1.25 + $0.016306125</span>
+    Monthly E911 Fee: <span class='price'>$1.39</span>
+    CNAM Lookup Fee: <span class='price'>$0.0039</span>
+    (Tax rates is not completely factored)
 </div>
 <div id='startts'>Log starts on %s</div>
 %s
 <hr />
 <h2>Call Logs</h2>
-<ol>
+<table class='callLog'>
+    <tr>
+        <td>Direction</th>
+        <th>Source Number</th>
+        <th>Caller ID</th>
+        <th>Destination Number</th>
+        <th>Start time</th>
+        <th>Stop time</th>
+        <th>Length in Seconds</th>
+        <th>Codecs</th>
+    </tr>
 %s
-</ol>
+</table>
 <hr />
 Call stats are generated every hour. Actual billed time should be less than or equal to calculated calls.
 </body>

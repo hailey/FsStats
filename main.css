@@ -1,21 +1,17 @@
 body {
-    background-color:#000;
-    color: #fff;
+    background-color:#2D0320;
+    color: #E8B4BC;
 }
 h1 {
-    color: #acc;
     font-size: 3em;
 }
 h2 {
-    color: #ccc;
     font-size: 2em;
 }
 div#startts {
-    color: #faa;
     font-size:2em;
 }
 div#tcl {
-    color:#f88;
     font-size:2em;
 }
 
@@ -25,18 +21,37 @@ div.price {
 }
 
 div.call-len {
-    font-size: 2em;
-    color: #f29;
+    font-size: 3em;
+
 }
 div.est-prices {
-    font-size: 3em;
-    background-color: #444;
+    font-size: 2em;
+    color: #E3E7D3;
+    background-color: #645E9D;
+    padding: 15px 10px 15px 10px;n
 }
 
 div.rate {
-    background-color: #555;
+    background-color: #645E9D;
     width: 300px;
     padding: 8px;
+}
+
+div.est {
+    align-content: center;
+    background-color: #645E9D;
+    color: #E3E7D3;
+    font-size: 2em;
+    padding: 5px 10px 15px 10px;
+}
+
+.blueish {
+    background-color: #012A36;
+    color: #E3E7D3;
+}
+.dark {
+    background-color: #645e9d;
+    color: #E3E7D3;
 }
 
 div.price {
