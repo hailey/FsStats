@@ -53,6 +53,10 @@ div.est {
     background-color: #645e9d;
     color: #E3E7D3;
 }
+td {
+    padding: 2px 12px 2px 12px;
+    text-align: center;
+}
 
 div.price {
     float: right;
