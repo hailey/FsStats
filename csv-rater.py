@@ -161,7 +161,7 @@ lineResults += "<div class='est'>CNAM Estimate: $" + str(cnamCost) + ".</div>"
 lineResults += "<div class='est-prices'>DID Renewal Cost: $" + str(monthBill) + " over " + str(dateDiff) +" months.</div>"
 lineResults += "<div class='est-prices'>Calculated Expenses: $" + str(totalCost) + "</div>"
 print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
-print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration) + " CNAM lookups: " + str(cnamCost)
+print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration) + " CNAM cost: $" + str(cnamCost)
 topHtml = """
 <html>
 <head>
