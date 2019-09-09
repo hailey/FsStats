@@ -34,8 +34,6 @@ outboundRate = 0.0098 / 60
 cnamRate = 0.0039
 lineHtml = ""
 
-
-
 def diff_month(d1, d2):
     return (d1.year - d2.year) * 12 + d1.month - d2.month
 
@@ -95,12 +93,13 @@ with open(cdrfile, 'rb') as csvfile:
                 classcolor = 'blueish'
             else:
                 classcolor = 'dark'
+
             if cdrDestNumber == monitoredNumber:
                 #inbound to monitored number
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrDuration)
-                cnamCost = cnamCost + cnamRate;
+                cnamCount += 1
                 colorCount += 1
                 
                 lineHtml += "<tr class='"+ classcolor + "'><td>Inbound</td><td>" + cdrIdNumber + "</td><td>" + cdrIdName + "</td><td>" + cdrDestNumber + "</td><td>" + cdrStart + "</td><td>" + cdrEnd + "</td><td>" + minuteStamp + "</td><td>" + cdrCodec + "," + cdrWriteCodec + "</td><tr>"      
@@ -114,8 +113,6 @@ with open(cdrfile, 'rb') as csvfile:
                 else:
                     outboundDuration = outboundDuration + int(cdrDuration)
                     callTotal = callTotal + int(cdrDuration)
-                cnamCost = cnamCost + cnamRate;
-                cnamCount = cnamCount + 1
                 callDuration = callDuration + int(cdrDuration)
                 colorCount += 1
         
@@ -129,8 +126,7 @@ with open(cdrfile, 'rb') as csvfile:
                 callDuration = callDuration + int(cdrDuration)
                 inboundDuration = inboundDuration + int(cdrDuration)
                 callTotal = callTotal + int(cdrDuration)
-                cnamCost = cnamCost + cnamRate;
-                cnamCount = cnamCount + 1
+                cnamCount += 1
                 colorCount += 1
                 sendDebug("Inbound: " + cdrIdNumber + " calls " + cdrDestNumber + " for " + minuteStamp + " (" + cdrCodec + ")")
                 continue
@@ -154,14 +150,14 @@ monthBill = dateDiff * float(didCombined);
 inboundCost = inboundRate * inboundDuration
 outboundCost = outboundRate * outboundDuration
 totalCost = inboundCost + outboundCost + cnamCost + monthBill
-
+cnamCost = cnamCount * cnamRate
 
 
 lineResults = "<div id='tcl'>Total call length is " + str(callDuration) + " seconds. Billable time is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds in " + str(colorCount) +" calls</div>"
 lineResults += "<div class='call-len'>Inbound: " + inboundMinutes + " minutes and " + inboundRemainder + " seconds.</div><div class='est'>Inbound Estimate: $" + str(inboundCost) + "</div>"
 lineResults += "<div class='call-len'>Outbound: " + outboundMinutes + " minutes and " + outboundRemainder +" seconds.</div><div class='est'>Outbound Estimate: $" + str(outboundCost) + "</div>"
-lineResults += "<div class='call-len'>CNAM: " + str(cnamCount) + " lookps.</div>"
-lineResults += "<div class='est'>Estimate: $" + str(cnamCost) + ".</div>"
+lineResults += "<div class='call-len'>" + str(cnamCount) + " CNAM lookups.</div>"
+lineResults += "<div class='est'>CNAM Estimate: $" + str(cnamCost) + ".</div>"
 lineResults += "<div class='est-prices'>DID Renewal Cost: $" + str(monthBill) + " over " + str(dateDiff) +" months.</div>"
 lineResults += "<div class='est-prices'>Calculated Expenses: $" + str(totalCost) + "</div>"
 print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
