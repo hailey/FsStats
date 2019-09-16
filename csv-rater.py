@@ -40,7 +40,7 @@ def diff_month(d1, d2):
 def sendDebug(debugMsg):
     "Debug Function that checks if ini is set true for debug"
     if cfgDebug == "true":
-        print debugMsg
+        print(debugMsg)
     return
 
 def intToTimez(length):
@@ -53,9 +53,9 @@ def intToTimez(length):
 
 dateDiff = diff_month(datetime.datetime.today(),datetime.datetime(yearStart,monthStart,dayStart))
 
-print "The arguments are: " + str(cdrfile)
-print "Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber
-print "DID month count is " + str(dateDiff)
+print ("The arguments are: " + str(cdrfile))
+print ("Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber)
+print ("DID month count is " + str(dateDiff))
 sendDebug( "!!!DEBUG ENABLED!!!")
 with open(cdrfile, 'rb') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -106,7 +106,7 @@ with open(cdrfile, 'rb') as csvfile:
                 sendDebug("Inbound: " + cdrIdNumber + " (" + cdrIdName + ")  calls " + cdrDestNumber + " for " + minuteStamp + " seconds. (" + cdrCodec + ")")
                 continue
 
-            if re.match('^\+?1?(\d{7,10})$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
+            if re.match('^\+?1?(\d{7,10}|911)$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
                 #outbound
                 if re.match("^(\+?1)?(8(00|44|55|66|77|88)[2-9]\d{6})$", cdrDestNumber):
                     print "Got an 800 number, not billing."
