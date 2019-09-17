@@ -1,14 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import csv
 import re
 import sys
 import time
+import math
 import datetime
-import ConfigParser
-#import configparser
+#import ConfigParser
+import configparser
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 if len(sys.argv) > 1:
     config.read(sys.argv[1])
 else:
@@ -46,9 +47,9 @@ def sendDebug(debugMsg):
 
 def intToTimez(length):
     "Converts seconds into hours:minutes:seconds"
-    minutes = int(length) / 60
+    minutes = math.floor(int(length) / 60)
     seconds = int(length) % 60
-    hours = int(length) / 3600
+    hours = math.floor(int(length) / 3600)
     timeStamp = str(hours) + ":" + str(minutes) + ":" + str(seconds)
     return timeStamp
 
@@ -58,7 +59,7 @@ print ("The arguments are: " + str(cdrfile))
 print ("Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber)
 print ("DID month count is " + str(dateDiff))
 sendDebug( "!!!DEBUG ENABLED!!!")
-with open(cdrfile, 'r') as csvfile:
+with open(cdrfile,encoding="utf8") as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
     # The CDR Layout is as follows, <template name="example">"${caller_id_name}","${caller_id_number}","${destination_number}",
     #                               "${context}","${start_stamp}","${answer_stamp}","${end_stamp}","${duration}","${billsec}",
@@ -141,11 +142,11 @@ with open(cdrfile, 'r') as csvfile:
                     sendDebug("Ignoring local call " + cdrIdNumber + " calls " + cdrDestNumber + " for " + minuteStamp + "(" + cdrCodec + ")")
                     continue
                 
-callMinutes = str(callTotal / 60)
+callMinutes = str(math.floor(callTotal / 60))
 callRemainderSeconds = str(callTotal % 60)
-inboundMinutes = str(inboundDuration / 60)
+inboundMinutes = str(math.floor(inboundDuration / 60))
 inboundRemainder = str(inboundDuration % 60)
-outboundMinutes = str(outboundDuration / 60)
+outboundMinutes = str(math.floor(outboundDuration / 60))
 outboundRemainder = str(outboundDuration % 60)
 monthBill = dateDiff * float(didCombined);
 inboundCost = inboundRate * inboundDuration
