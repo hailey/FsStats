@@ -6,6 +6,7 @@ import sys
 import time
 import datetime
 import ConfigParser
+#import configparser
 
 config = ConfigParser.ConfigParser()
 if len(sys.argv) > 1:
@@ -57,7 +58,7 @@ print ("The arguments are: " + str(cdrfile))
 print ("Looking for calls to and from " + monitoredExtension  + " as well as " + monitoredNumber)
 print ("DID month count is " + str(dateDiff))
 sendDebug( "!!!DEBUG ENABLED!!!")
-with open(cdrfile, 'rb') as csvfile:
+with open(cdrfile, 'r') as csvfile:
     cdrHandle = csv.reader(csvfile, delimiter=',', quotechar='"')
     # The CDR Layout is as follows, <template name="example">"${caller_id_name}","${caller_id_number}","${destination_number}",
     #                               "${context}","${start_stamp}","${answer_stamp}","${end_stamp}","${duration}","${billsec}",
@@ -109,7 +110,7 @@ with open(cdrfile, 'rb') as csvfile:
             if re.match('^\+?1?(\d{7,10}|911)$',cdrDestNumber) and cdrIdNumber == monitoredExtension:
                 #outbound
                 if re.match("^(\+?1)?(8(00|44|55|66|77|88)[2-9]\d{6})$", cdrDestNumber):
-                    print "Got an 800 number, not billing."
+                    print ("Got an 800 number, not billing.")
                 else:
                     outboundDuration = outboundDuration + int(cdrDuration)
                     callTotal = callTotal + int(cdrDuration)
@@ -160,8 +161,8 @@ lineResults += "<div class='call-len'>" + str(cnamCount) + " CNAM lookups.</div>
 lineResults += "<div class='est'>CNAM Estimate: $" + str(cnamCost) + ".</div>"
 lineResults += "<div class='est-prices'>DID Renewal Cost: $" + str(monthBill) + " over " + str(dateDiff) +" months.</div>"
 lineResults += "<div class='est-prices'>Calculated Expenses: $" + str(totalCost) + "</div>"
-print "Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds."
-print "Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration) + " CNAM cost: $" + str(cnamCost)
+print ("Total Call time is " + str(callDuration) + " seconds, but billable is " + callMinutes + " minutes and " + callRemainderSeconds + " seconds.")
+print  ("Inbound billtime: " + str(inboundDuration) + " Outbound billtime: " + str(outboundDuration) + " CNAM cost: $" + str(cnamCost))
 topHtml = """
 <html>
 <head>
@@ -201,7 +202,7 @@ Call stats are generated every hour. Actual billed time should be less than or e
 </body>
 </html>""" % (monitoredExtension,monitoredExtension,datetime.datetime.now(),firstTS,lineResults,lineHtml)
 sendDebug(topHtml)
-print "Writing above HTML to " + htmlDocFile
+print ("Writing above HTML to " + htmlDocFile)
 htmlFile = open (htmlDocFile,"w")
 htmlFile.write(topHtml)
 htmlFile.close()
